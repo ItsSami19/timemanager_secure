@@ -1,9 +1,10 @@
 // app/api/team-timesheets/[id]/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient, TimesheetStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+const allowedActions = ["APPROVED", "REJECTED"] as const;
+type TimesheetAction = (typeof allowedActions)[number];
 
 export async function PATCH(
   request: Request,
@@ -14,19 +15,36 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { action } = await request.json(); // { action: "APPROVED" | "REJECTED" }
-  if (!["APPROVED", "REJECTED"].includes(action)) {
+  const { action } = await request.json();
+  if (!allowedActions.includes(action)) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   }
 
-  const id = params.id;
+  const id = String(params.id || "");
+  if (!id) {
+    return NextResponse.json({ error: "Missing timesheet ID" }, { status: 400 });
+  }
+
   try {
-    const updated = await prisma.timesheet.update({
-      where: { id },
-      data: { status: action as TimesheetStatus },
+    const result = await prisma.timesheet.updateMany({
+      where: {
+        id,
+        user: {
+          team: {
+            supervisorId: session.user.id,
+          },
+        },
+      },
+      data: { status: action as TimesheetAction },
     });
-    return NextResponse.json(updated);
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: "Timesheet not found or not owned by your team" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, updated: result.count });
   } catch (e) {
+    console.error("Error updating timesheet status:", e);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }

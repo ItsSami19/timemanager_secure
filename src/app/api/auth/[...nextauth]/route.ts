@@ -2,6 +2,9 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
+import { verifyPassword } from "@/lib/password";
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -13,19 +16,20 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials.password) {
-          throw new Error("Email and password are required");
+        const email = String(credentials?.email || "").trim().toLowerCase();
+        const password = String(credentials?.password || "");
+
+        if (!email || !password || !emailRegex.test(email)) {
+          throw new Error("Invalid email or password");
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
-        if (!user) throw new Error("No user found");
+        if (!user) throw new Error("Invalid email or password");
 
-        // Klartext-Vergleich (nur für Test/Dev!)
-        if (credentials.password !== user.password) {
-          throw new Error("Invalid email or password");
-        }
+        const validPassword = await verifyPassword(password, user.password);
+        if (!validPassword) throw new Error("Invalid email or password");
 
         return {
           id: user.id,
