@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String              @id @default(uuid())
+  email             String              @unique
+  name              String
+  password          String
+  role              Role
+  flexTime          Int                 @default(0)
+  vacationDays      Int                 @default(30)
+  flextimeAbsences  FlextimeAbsence[]
+
+  // Relations:
+  timesheets        Timesheet[]
+  vacationRequests  VacationRequest[]
+  sicknesses        Sickness[]
+
+  // Team-Relation:
+  teamId            String?
+  team              Team?               @relation("TeamMembers", fields: [teamId], references: [id])
+
+  // Supervisor einer eigenen Team-Leitung:
+  supervisingTeams  Team[]              @relation("TeamSupervisor")
+
+  sessions          Session[]
+}
+
+model Team {
+  id           String   @id @default(cuid())
+  name         String   @unique
+
+  // Supervisor-Relation (1:1 von Team zu User):
+  supervisorId String
+  supervisor   User     @relation("TeamSupervisor", fields: [supervisorId], references: [id])
+
+  // Member-Relation (n:1 von User zu Team):
+  members      User[]   @relation("TeamMembers")
+}
+
+model FlextimeAbsence {
+   id        String   @id @default(uuid())
+   userId    String
+   date      DateTime
+   hours     Int      @default(8)
+   user      User     @relation(fields: [userId], references: [id])
+   createdAt DateTime @default(now())
+ }
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  expires      DateTime
+}
+
+model Timesheet {
+  id         String          @id @default(uuid())
+  userId     String
+  date       DateTime
+  start      DateTime
+  end        DateTime
+  break      Int             // In minutes
+  status     TimesheetStatus
+  comment    String?
+  user       User            @relation(fields: [userId], references: [id])
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
+
+enum TimesheetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model VacationRequest {
+  id         String         @id @default(uuid())
+  userId     String
+  startDate  DateTime
+  endDate    DateTime
+  status     RequestStatus
+  reason     String?
+  user       User           @relation(fields: [userId], references: [id])
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model Sickness {
+  id         String         @id @default(uuid())
+  userId     String
+  fromDate   DateTime
+  toDate     DateTime
+  user       User           @relation(fields: [userId], references: [id])
+  createdAt  DateTime       @default(now())
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum Role {
+  EMPLOYEE
+  SUPERVISOR
+  HR
+}
