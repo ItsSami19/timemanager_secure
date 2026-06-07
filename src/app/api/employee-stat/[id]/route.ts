@@ -5,9 +5,9 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = params.id;
+  const { id: userId } = await params;
 
   if (!userId) {
     return NextResponse.json({ error: "User ID fehlt" }, { status: 400 });

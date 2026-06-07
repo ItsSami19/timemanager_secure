@@ -51,7 +51,7 @@ export default function Page() {
           data.workHoursByMonth
         ).map(([month, hours]) => ({ month, hours: hours as number }));
         setTimeAccountData(times);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
         setError("Fehler beim Laden der Daten");
       }

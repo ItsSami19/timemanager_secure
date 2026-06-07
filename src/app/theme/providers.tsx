@@ -1,7 +1,7 @@
 'use client';
 
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import { useState, useEffect, createContext, useContext, useMemo, ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, useMemo, useCallback, ReactNode } from 'react';
 import { lightTheme, darkTheme } from './theme';
 
 interface ColorModeContextType {
@@ -20,11 +20,13 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const toggleMode = () => {
-    const newMode = mode === 'light' ? 'dark' : 'light';
-    setMode(newMode);
-    localStorage.setItem('themeMode', newMode);
-  };
+  const toggleMode = useCallback(() => {
+    setMode((currentMode) => {
+      const newMode = currentMode === 'light' ? 'dark' : 'light';
+      localStorage.setItem('themeMode', newMode);
+      return newMode;
+    });
+  }, []);
 
   // ✅ Verwende useMemo, um das Objekt stabil zu halten
   const colorMode = useMemo(() => ({

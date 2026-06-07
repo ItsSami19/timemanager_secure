@@ -2,7 +2,7 @@
 // src/app/api/absence/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 function parseDate(value: unknown): Date | null {
@@ -89,6 +89,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
+type AbsenceBody = {
+  type?: unknown;
+  from?: unknown;
+  until?: unknown;
+  date?: unknown;
+  hours?: unknown;
+};
+
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -102,7 +110,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const type = String((body as any).type || "").toUpperCase();
+  const typedBody = body as AbsenceBody;
+  const type = String(typedBody.type ?? "").toUpperCase();
   if (!["VACATION", "SICKNESS", "FLEXTIME"].includes(type)) {
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   }
@@ -118,8 +127,8 @@ export async function POST(request: NextRequest) {
 
   try {
     if (type === "VACATION") {
-      const fromDate = parseDate((body as any).from);
-      const untilDate = parseDate((body as any).until);
+      const fromDate = parseDate(typedBody.from);
+      const untilDate = parseDate(typedBody.until);
       if (!fromDate || !untilDate || fromDate > untilDate) {
         return NextResponse.json({ error: "Invalid vacation dates" }, { status: 400 });
       }
@@ -142,8 +151,8 @@ export async function POST(request: NextRequest) {
         }),
       ]);
     } else if (type === "SICKNESS") {
-      const fromDate = parseDate((body as any).from);
-      const untilDate = parseDate((body as any).until);
+      const fromDate = parseDate(typedBody.from);
+      const untilDate = parseDate(typedBody.until);
       if (!fromDate || !untilDate || fromDate > untilDate) {
         return NextResponse.json({ error: "Invalid sickness dates" }, { status: 400 });
       }
@@ -152,8 +161,8 @@ export async function POST(request: NextRequest) {
         data: { userId, fromDate, toDate: untilDate },
       });
     } else {
-      const date = parseDate((body as any).date);
-      const hours = (body as any).hours === undefined ? 8 : parsePositiveInt((body as any).hours);
+      const date = parseDate(typedBody.date);
+      const hours = typedBody.hours === undefined ? 8 : parsePositiveInt(typedBody.hours);
       if (!date || hours === null || hours <= 0 || hours > 24) {
         return NextResponse.json({ error: "Invalid flextime entry" }, { status: 400 });
       }

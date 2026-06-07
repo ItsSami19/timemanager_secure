@@ -18,8 +18,14 @@ import {
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 
+interface EmployeeOption {
+  id: string;
+  name: string;
+  role: string;
+}
+
 export default function HRSicknessRequest() {
-  const [employees, setEmployees] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [untilDate, setUntilDate] = useState<Date | null>(null);
