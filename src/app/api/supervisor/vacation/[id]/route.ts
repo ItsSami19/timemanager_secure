@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { RequestStatus } from "@prisma/client";
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  const id = params.id;
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const body = await request.json();
   const { status, rejectionReason } = body;
 
@@ -14,7 +14,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 
   try {
-    const updateData: any = { status: status as RequestStatus };
+    const updateData: { status: RequestStatus; reason?: string } = { status: status as RequestStatus };
 
     if (status === "REJECTED" && rejectionReason) {
       updateData.reason = rejectionReason;

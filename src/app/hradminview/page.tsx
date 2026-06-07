@@ -54,7 +54,7 @@ export default function HRAdminPage() {
     try {
       const res = await axios.get("/api/hradmin/users");
       setUsers(res.data);
-    } catch (error) {
+    } catch {
       setError("Failed to fetch users");
     }
   };
@@ -63,7 +63,7 @@ export default function HRAdminPage() {
     try {
       const res = await axios.get("/api/hradmin/teams");
       setTeams(res.data);
-    } catch (error) {
+    } catch {
       setError("Failed to fetch teams");
     }
   };
@@ -111,8 +111,9 @@ export default function HRAdminPage() {
       setOpen(false);
       await fetchUsers();
       await fetchTeams();
-    } catch (error: any) {
-      setError(error.response?.data?.error || "Failed to create user");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.error : "Failed to create user";
+      setError(typeof message === "string" ? message : "Failed to create user");
     } finally {
       setLoading(false);
     }
@@ -159,8 +160,9 @@ export default function HRAdminPage() {
       setNewTeamMembers([]);
       setOpenTeamDialog(false);
       await fetchUsers();
-    } catch (error: any) {
-      setError(error.response?.data?.error || "Failed to create team");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.error : "Failed to create team";
+      setError(typeof message === "string" ? message : "Failed to create team");
     } finally {
       setLoading(false);
     }
@@ -182,8 +184,9 @@ export default function HRAdminPage() {
       const newRole = updateRole(user.role, action);
       await axios.post("/api/hradmin/update", { id, role: newRole });
       await fetchUsers();
-    } catch (error: any) {
-      setError(error.response?.data?.error || "Failed to update role");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.error : "Failed to update role";
+      setError(typeof message === "string" ? message : "Failed to update role");
     } finally {
       setLoading(false);
     }
@@ -206,8 +209,9 @@ export default function HRAdminPage() {
       ));
       // Refresh teams to ensure all data is up to date
       await fetchTeams();
-    } catch (error: any) {
-      setError(error.response?.data?.error || "Failed to update team");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.error : "Failed to update team";
+      setError(typeof message === "string" ? message : "Failed to update team");
     } finally {
       setLoading(false);
     }
@@ -218,8 +222,9 @@ export default function HRAdminPage() {
       setLoading(true);
       await axios.post("/api/hradmin/delete", { id });
       await fetchUsers();
-    } catch (error: any) {
-      setError(error.response?.data?.error || "Failed to delete user");
+    } catch (error: unknown) {
+      const message = axios.isAxiosError(error) ? error.response?.data?.error : "Failed to delete user";
+      setError(typeof message === "string" ? message : "Failed to delete user");
     } finally {
       setLoading(false);
     }

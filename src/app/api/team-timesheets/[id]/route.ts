@@ -8,7 +8,7 @@ type TimesheetAction = (typeof allowedActions)[number];
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session || session.user.role !== "SUPERVISOR") {
@@ -20,15 +20,16 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   }
 
-  const id = String(params.id || "");
-  if (!id) {
+  const { id } = await params;
+  const resolvedId = String(id || "");
+  if (!resolvedId) {
     return NextResponse.json({ error: "Missing timesheet ID" }, { status: 400 });
   }
 
   try {
     const result = await prisma.timesheet.updateMany({
       where: {
-        id,
+        id: resolvedId,
         user: {
           team: {
             supervisorId: session.user.id,

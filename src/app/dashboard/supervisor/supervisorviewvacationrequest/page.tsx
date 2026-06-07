@@ -17,9 +17,24 @@ import {
 } from "@mui/material";
 
 import Grid from "@mui/material/GridLegacy"; // Grid version 2
+interface VacationRequestItem {
+  id: string;
+  worker: string;
+  workerId: string;
+  from: string;
+  to: string;
+  status: string;
+  reason?: string | null;
+}
+
+interface TeamMemberItem {
+  id: string;
+  name: string;
+}
+
 export default function VacationPage() {
-  const [vacationRequests, setVacationRequests] = useState<any[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [vacationRequests, setVacationRequests] = useState<VacationRequestItem[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberItem[]>([]);
 
   useEffect(() => {
     const fetchVacationData = async () => {

@@ -9,11 +9,20 @@ import {
 } from '@mui/material';
 import { Person } from '@mui/icons-material';
 
+interface EmployeeSummary {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  team: string;
+  supervisor: string;
+  lastActive: string;
+}
+
 const UserDashboard = () => {
   const theme = useTheme();
-  const [employee, setEmployee] = useState<any>(null);
+  const [employee, setEmployee] = useState<EmployeeSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserIdAndEmployee = async () => {
@@ -21,7 +30,6 @@ const UserDashboard = () => {
         const sessionRes = await fetch('/api/session/user');
         if (!sessionRes.ok) throw new Error('Session konnte nicht geladen werden');
         const { userId } = await sessionRes.json();
-        setUserId(userId);
 
         const employeeRes = await fetch(`/api/employee-stat/${userId}`);
         const employeeData = await employeeRes.json();

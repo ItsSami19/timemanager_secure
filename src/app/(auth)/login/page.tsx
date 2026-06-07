@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import {
@@ -17,7 +17,7 @@ import {
 import { Brightness7, Brightness4 } from "@mui/icons-material";
 import { useColorMode } from "../../theme/providers";
 
-export default function LoginPage() {
+function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -173,5 +173,13 @@ export default function LoginPage() {
         </Box>
       </Box>
     </Container>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<Typography>Loading...</Typography>}>
+      <LoginContent />
+    </Suspense>
   );
 }
