@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hashPassword } from "@/lib/password";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
 
       // Check if team with same name already exists
       const existingTeam = await prisma.team.findUnique({
-        where: { name: team }
+        where: { name: team },
       });
 
       if (existingTeam) {
@@ -62,6 +63,8 @@ export async function POST(req: Request) {
       }
     }
 
+    const hashedPassword = await hashPassword(String(password));
+
     // Create the user
     const user = await prisma.user.create({
       data: {
@@ -69,16 +72,16 @@ export async function POST(req: Request) {
         name,
         teamId,
         role,
-        password,
+        password: hashedPassword,
       },
       include: {
         team: {
           select: {
             id: true,
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(user);
